@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System;
+using DG.Tweening;
 
 public class UIManager : MonoBehaviour
 {
@@ -24,11 +25,17 @@ public class UIManager : MonoBehaviour
     private Button Delete_Button;
     [SerializeField]
     private Button GameExit_Button;
+    [SerializeField]
+    private Button MaxPopup_Button;
 
     [Header("Texts")]
 
     [SerializeField]
     private TMP_Text Stake_Text;
+    [SerializeField]
+    private TMP_Text Win_Text;
+    [SerializeField]
+    private TMP_Text TotalBet_text;
     //[SerializeField]
     //private TMP_Text Win_Text;
 
@@ -47,11 +54,29 @@ public class UIManager : MonoBehaviour
     private GameObject PlayAnim_Object;
     [SerializeField]
     private GameObject CoinValueDisable_object;
+    [SerializeField]
+    private GameObject StarAnim_Object;
 
     [Header("Scripts")]
     [SerializeField]
     private KenoBehaviour KenoManager;
 
+    [Header("Popups")]
+    [SerializeField]
+    private GameObject MainPopup_Object;
+    [SerializeField]
+    private GameObject MaxPopup_Object;
+    [SerializeField]
+    private GameObject WinPopup_Object;
+    [SerializeField]
+    private Transform WinPopup_Transform;
+    [SerializeField]
+    private GameObject CoinAnim_Object;
+
+    [Header("Image Animation Script")]
+    [SerializeField]
+    private ImageAnimation TitleAnim;
+        
     private int stake = 5;
     private int winning = 0;
     internal bool isReset = false;
@@ -81,9 +106,13 @@ public class UIManager : MonoBehaviour
         if (GameExit_Button) GameExit_Button.onClick.RemoveAllListeners();
         if (GameExit_Button) GameExit_Button.onClick.AddListener(CallOnExitFunction);
 
+        if (MaxPopup_Button) MaxPopup_Button.onClick.RemoveAllListeners();
+        if (MaxPopup_Button) MaxPopup_Button.onClick.AddListener(MaxPopupDisable);
+
         stake = 5;
         winning = 0;
         if (Stake_Text) Stake_Text.text = stake.ToString();
+        if (TotalBet_text) TotalBet_text.text = stake.ToString();
         //if (Win_Text) Win_Text.text = winning.ToString();
         Application.ExternalCall("window.parent.postMessage", "OnEnter", "*");
     }
@@ -95,6 +124,7 @@ public class UIManager : MonoBehaviour
 
     private void DummyPlay()
     {
+        if (StarAnim_Object) StarAnim_Object.SetActive(true);
         if(isReset)
         {
             ResetGame();
@@ -104,6 +134,10 @@ public class UIManager : MonoBehaviour
         if (Delete_Button) Delete_Button.interactable = false;
         if (CoinValueDisable_object) CoinValueDisable_object.SetActive(true);
         KenoManager.PlayDummyGame();
+        DOVirtual.DelayedCall(0.5f, () =>
+        {
+            if (StarAnim_Object) StarAnim_Object.SetActive(false);
+        });
     }
 
     private void ChangeStake(bool type)
@@ -114,6 +148,7 @@ public class UIManager : MonoBehaviour
             {
                 stake += 5;
                 if (Stake_Text) Stake_Text.text = stake.ToString();
+                if (TotalBet_text) TotalBet_text.text = stake.ToString();
             }
         }
         else
@@ -122,6 +157,7 @@ public class UIManager : MonoBehaviour
             {
                 stake -= 5;
                 if (Stake_Text) Stake_Text.text = stake.ToString();
+                if (TotalBet_text) TotalBet_text.text = stake.ToString();
             }
         }
     }
@@ -141,7 +177,39 @@ public class UIManager : MonoBehaviour
         if (Random_Button) Random_Button.interactable = isActive;
         if (AutoPlay_Button) AutoPlay_Button.interactable = isActive;
         if (PlayAnim_Object) PlayAnim_Object.SetActive(isActive);
+    }
 
+    private void WinPopupEnable()
+    {
+        CancelInvoke("WinPopupDisable");
+        if (TitleAnim) TitleAnim.StartAnimation();
+        if (WinPopup_Transform) WinPopup_Transform.localScale = Vector3.zero;
+        if (MainPopup_Object) MainPopup_Object.SetActive(true);
+        if (WinPopup_Object) WinPopup_Object.SetActive(true);
+        if (WinPopup_Transform) WinPopup_Transform.DOScale(Vector3.one, 0.5f);
+        if (CoinAnim_Object) CoinAnim_Object.SetActive(true);
+        Invoke("WinPopupDisable", 5f);
+    }
+
+    private void WinPopupDisable()
+    {
+        if (MainPopup_Object) MainPopup_Object.SetActive(false);
+        if (WinPopup_Object) WinPopup_Object.SetActive(false);
+        if (CoinAnim_Object) CoinAnim_Object.SetActive(false);
+    }
+
+    internal void MaxPopupEnable()
+    {
+        CancelInvoke("MaxPopupDisable");
+        if (MainPopup_Object) MainPopup_Object.SetActive(true);
+        if (MaxPopup_Object) MaxPopup_Object.SetActive(true);
+        Invoke("MaxPopupDisable", 2f);
+    }
+
+    private void MaxPopupDisable()
+    {
+        if (MainPopup_Object) MainPopup_Object.SetActive(false);
+        if (MaxPopup_Object) MaxPopup_Object.SetActive(false);
     }
 
     internal void UpdateSelectedText(int count)
@@ -149,22 +217,30 @@ public class UIManager : MonoBehaviour
         BetAmountUpdate(count);
     }
 
+    internal void CheckFinalWinning()
+    {
+        if(winning > 0)
+        {
+            WinPopupEnable();
+        }
+    }
+
     internal void CheckWinnings(int count)
     {
-        //if(count >= 2)
-        //{
-        //    if (Win_Objects[count - 2]) Win_Objects[count - 2].SetActive(true);
-        //    //winning += int.Parse(Amount_Text[count - 2].text);
-        //}
-        //else
-        //{
-        //    for (int i = 0; i < Win_Objects.Count; i++)
-        //    {
-        //        if (Win_Objects[i]) Win_Objects[i].SetActive(false);
-        //    }
-        //    winning = 0;
-        //}
-        ////if (Win_Text) Win _Text.text = winning.ToString();
+        if(count >= 2)
+        {
+            //if (Win_Objects[count - 2]) Win_Objects[count - 2].SetActive(true);
+            winning += int.Parse(Payout_Text[count - 2].text);
+        }
+        else
+        {
+            //for (int i = 0; i < Win_Objects.Count; i++)
+            //{
+            //    if (Win_Objects[i]) Win_Objects[i].SetActive(false);
+            //}
+            winning = 0;
+        }
+        if (Win_Text) Win_Text.text = winning.ToString();
     }
 
     internal void BetAmountUpdate(int count)
@@ -240,6 +316,8 @@ public class UIManager : MonoBehaviour
 
     private void ResetGame()
     {
+        KenoManager.ResetWinAnim();
+        if (TitleAnim) TitleAnim.StopAnimation();
         KenoManager.ResetButtons();
         if (Reset_Object) Reset_Object.SetActive(false);
         isReset = false;
