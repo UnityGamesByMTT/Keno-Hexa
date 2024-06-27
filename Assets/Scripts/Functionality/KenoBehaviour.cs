@@ -46,6 +46,10 @@ public class KenoBehaviour : MonoBehaviour
     [Header("GameObject")]
     [SerializeField]
     private GameObject DisableScreen_object;
+    [SerializeField]
+    private List<Transform> Win_Transform;
+    [SerializeField]
+    private List<Transform> TempWin_Transform;
 
     void Start()
     {
@@ -71,6 +75,32 @@ public class KenoBehaviour : MonoBehaviour
         for (int i = 0; i < templist.Count; i++)
         {
             KenoButtonScripts[templist[i]].OnKenoSelect();
+        }
+    }
+
+    internal void CheckTransform(Transform thisObject)
+    {
+        if (thisObject.childCount <= 1) 
+        {
+            TempWin_Transform[TempWin_Transform.Count - 1].SetParent(thisObject);
+            TempWin_Transform[TempWin_Transform.Count - 1].localPosition = new Vector2(2.6f, 0);
+            TempWin_Transform[TempWin_Transform.Count - 1].SetAsFirstSibling();
+            TempWin_Transform[TempWin_Transform.Count - 1].gameObject.SetActive(true);
+            TempWin_Transform.RemoveAt(TempWin_Transform.Count - 1);
+        }
+        else
+        {
+            Transform temp = null;
+            foreach (Transform t in TempWin_Transform)
+            {
+                if (t == thisObject.GetChild(0))
+                {
+                    temp = t;
+                    break;
+                }
+            }
+            TempWin_Transform.Remove(temp);
+            thisObject.GetChild(0).gameObject.SetActive(true);
         }
     }
 
@@ -123,8 +153,16 @@ public class KenoBehaviour : MonoBehaviour
         uiManager.UpdateSelectedText(selectionCounter);
     }
 
+    internal void ShowMaxPopup()
+    {
+        uiManager.MaxPopupEnable();
+    }
+
     internal void PlayDummyGame()
     {
+        TempWin_Transform.Clear();
+        TempWin_Transform.TrimExcess();
+        TempWin_Transform.AddRange(Win_Transform);
         if (DisableScreen_object) DisableScreen_object.SetActive(true);
         ResultList.Clear();
         ResultList.TrimExcess();
@@ -144,6 +182,7 @@ public class KenoBehaviour : MonoBehaviour
             KenoButtonScripts[ResultList[i]].ResultColor();
             yield return new WaitForSeconds(0.1f);
         }
+        uiManager.CheckFinalWinning();
         uiManager.EnableReset();
         if (DisableScreen_object) DisableScreen_object.SetActive(false);
     }
@@ -173,6 +212,16 @@ public class KenoBehaviour : MonoBehaviour
             ts.localPosition = initialPosition;
         }
         if (MainNumber_Text) MainNumber_Text.text = "00";
+    }
+
+    internal void ResetWinAnim()
+    {
+        foreach (Transform t in Win_Transform)
+        {
+            t.gameObject.SetActive(false);
+        }
+        TempWin_Transform.Clear();
+        TempWin_Transform.TrimExcess();
     }
 
     internal void CleanPage()

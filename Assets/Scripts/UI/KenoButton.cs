@@ -48,6 +48,7 @@ public class KenoButton : MonoBehaviour
             }
             else
             {
+                KenoManager.ShowMaxPopup();
                 isActive = false;
             }
         }
@@ -70,6 +71,7 @@ public class KenoButton : MonoBehaviour
             //enableWinTick();
             KenoManager.ResultCounter++;
             KenoManager.ActivateWinning();
+            KenoManager.CheckTransform(this.transform);
         }
     }
 
