@@ -29,7 +29,14 @@ public class KenoButton : MonoBehaviour
     {
         This_Button = this.gameObject.GetComponent<Button>();
         This_Image = this.gameObject.GetComponent<Image>();
-        This_Text = this.transform.GetChild(0).GetComponent<TMP_Text>();
+        if (this.transform.GetChild(0).GetComponent<TMP_Text>() == null)
+        {
+            This_Text = this.transform.GetChild(1).GetComponent<TMP_Text>();
+        }
+        else
+        {
+            This_Text = this.transform.GetChild(0).GetComponent<TMP_Text>();
+        }
         if (This_Button) This_Button.onClick.RemoveAllListeners();
         if (This_Button) This_Button.onClick.AddListener(OnKenoSelect);
     }
