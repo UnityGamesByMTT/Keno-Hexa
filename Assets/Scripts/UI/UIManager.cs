@@ -114,7 +114,6 @@ public class UIManager : MonoBehaviour
         if (Stake_Text) Stake_Text.text = stake.ToString();
         if (TotalBet_text) TotalBet_text.text = stake.ToString();
         //if (Win_Text) Win_Text.text = winning.ToString();
-        Application.ExternalCall("window.parent.postMessage", "OnEnter", "*");
     }
 
     private void CallOnExitFunction()
